@@ -1,30 +1,126 @@
 ---
 title: "final_Project"
-author: "TerrenceN"
+author: "Terrence Nemayire"
 date: "December 9, 2019"
-output: pdf_document
+output:
+  word_document: default
+  pdf_document: default
 ---
+1. Introduction
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+This paper is on the recorded 2006 crimes committed in the various cities of USA.Source data that will be used has been obtained from : https://data.world/ucr/crime-in-us-2006-offenses. The dataset being an excel file containing different variable of crim,e type. With crimes patterns and population growth, models will be created that can be used to predict or assists in decision making process. To embark on this research various tools and softwares listed below will be needed to help in answering the Research question
+
+2. Research Question:
+
+Does the size of population affect the type of crime or crimes committed in particular towns in the United States of America?
+  and the baseline hypothesis is
+      a) Population size affects type of crimes committed
+      b) and the null hpothesis being- Population size doesnt affect crimes commited
+      
+3. Methodology and Tools
+
+To carry out the research analysis, the following tools will need to be present and installed on a standard Computer withe the following minimu requirements
+ -Hardware ( 4GhZ cPU, 40g HDD, 4G RAM)
+ -Minimum Requirements to be installed
+ -Windows Operating System 7/8/10 (32/64bit)
+ -Microsoft Office Package 2007 and above (Ms Excel and Ms Word)
+ -R- Studio Version 1.1.463 - https://cran.rstudio.com/
+ -R version 3.6.1
+ -MiKTeX 2.9 Setup
+ -In R –Studio have update packages of the following;
+    Knitr, Yaml, Htmltools, caTools, Bitops, Rmarkdown, ggplot, ggplot2, LaTex
+ -GitHub account
+ 
+4.1 Analysis -Loading data
+
+The purpose of this analysis is to find out if there is a relationship between population and specific crime types that occur in various citiies. At this stage l calling the excel raw data file into R NB The files was already cleaned from the original source and they will be no need for a Key or data dictionary since all the variables are self explanatory. Once the file has been loaded into a dataset in R. the second stage will be to load the dataset into a dataframe that can be manipulated easily by inbuilt libraries. The last part would be to view the summary report of the dataframe for further analysis that will be used in answering the Question. Code block below.
+
+```{r}
+library(readxl)
+crimes <- read_excel("project_data/crimefile.xlsx")
+crimeframe <- crimes [,c("City","population","violent_crime","murder","rape","robbery","assault")]
+crimeframe
+summary (crimeframe)
 ```
 
-## R Markdown
+4.2 Analysis - Finding coerrelation between the variables
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+After analysis of the dataframe, the various coefficients of the variables, alot had a result of NA as a coefficient. These results of NA indicates that the variables in question are not linearly related to the other variables, or the data from the dataset is noty sufficient enough to prove a meaning to the level of signficance and for multiple regression, the NA coeeficients depicts that the variables do not add much value to the models or affects the response variable (Y). to find coefficient, l have to create anew dataframe colled corcrimeframe eliminating column on cities.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+```{r}
+corcrimeframe <- crimeframe [,c("population","violent_crime","murder","rape","robbery","assault")]
+cor(corcrimeframe)
 ```
 
-## Including Plots
+4.3 Anlysis - Linear Regression Calculatioin 
 
-You can also embed plots, for example:
+Linear regression in this case is used to establish a linear relationship (a mathematical formula) between the predictor variable(s) and the response variable, so that, l can use this formula to estimate the value of the response Y, when only the predictors (Xs) values are known. the Resultant formulae will be in the form of Y = AX + B
+Now l will calculate the Linear regression model from these variables, 
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+  NB: The response variable (Y) is murder cases reported  and the population is the predictor variable (X) 
+                          murder =Intercept + (beta * population)
+```{r}
+linearMod <- lm(murder ~ population, data=corcrimeframe)
+print(linearMod)
+summary (linearMod)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+The linear regression model for the two variables (murder and population) is as follow
+murder =-3.250e-01 + 8.547e-05(population) hence the mathematical model is:
+Y = -3.250e-01 + 8.547e-05X (Hence with this model l can try to predict the possible number of murders if population in a city increases or decreases), since from the coefficents table, a strong signficant relationship exists.
+Using the inbuilt summary function in R, l can find the p values of the model to determine model's significance statistically. The p value statistical signficance of 2.2e-16 is above the pre-determined significance level of 0.05
+hence the population variable has more signficance in this linear regression model, hence to say the more the population
+the more the number of recorded murder cases and the model can be used accurately to predict.
+
+Below is a scatter plot diagram based on the Pearson Coeefficient Model. The product-moment correlation coefficient is a measure of the strength of the linear relationship between the two variables (Population and Murder)
+
+```{r}
+library("ggpubr")
+ggscatter(corcrimeframe, x = "population", y = "murder", 
+          add = "reg.line", conf.int = TRUE, 
+          cor.coef = TRUE, cor.method = "pearson")
+
+corgraph <- cor.test(corcrimeframe$population, corcrimeframe$murder) 
+                    method = ("pearson")
+corgraph
+
+```
+
+4.4  Anlysis -Multiple Linear Regression
+
+Multiple linear Regression, is a statistical technique that uses several  variables to predict the outcome of a response variable. The goal of multiple linear regression (MLR) is to model the linear relationship between the independent variables and response-dependent variable. From the question above, I intend to answer the question, Is there a relation between the number of murder case against changes from other variables (population, assult cases, rape,robbery and violent crimes). The expected regression model that best suits is one which is proven statistically to have a high degree of freedom value, stigma error rate, p value using the t test and the Adjusted R-Squared value. The model equation will be as y = a + b1x1 + b2x2 +...bnxn, where x1, x2..xn repreesnt the predictor variable, b1, b2..bn being the variable coefficients and the value of a being the intercept (constant)
+
+a) MultiModel_1 -building  the first multi regression model using all the variables, Y is murder and  X predictor variants being other 6 variables, (population, violent_crime, murder, rape, robbery ,assault)
+
+b) MultiModel_2- building the second multi regression model
+
+```{r}
+MultiModel_1 <- lm(murder ~ population+violent_crime+murder+rape+robbery+assault , data=corcrimeframe)
+summary (MultiModel_1)
+
+MultiModel_2 <- lm(murder ~ population+violent_crime+murder+robbery, data=corcrimeframe)  #
+summary (MultiModel_2)
+## .
+```
+
+5 Results
+
+a) Model_2  Y= 0.29 + (-0.00)population + (0.016)violent_crime + (0.01)rape + (0.01)robbery + (-0,00)assault
+From the first model, predictor variables  (Rape and Assault and negligable and has no signficance in the model that can answer the resarch question, hence the second model l will remove the 2 negligable variables and improve model.
+
+b) Model_2 Y= 0.31 + (-0.00)population + (0.016)violent_crime +(0.01)robbery
+From the second model, all the variables have a p value that is signaficanT based on  the t-test and the variables have a high signficant effect to the response variable. The Adjusted R-squared test IN the new model has a 89% accuracy rate for the model using the (population, violent_crime and robbery variables) hence l can safely conclude to say Model 2 can statistically be used for further analysis or prediction.
+
+```{r}
+print(MultiModel_1)
+print(MultiModel_2)
+
+library(scatterplot3d)
+attach(crimes)
+scatterplot3d(population,murder,robbery,violent_crime,main ="Crime Statistis main 3D scatterplot")
+```
+
+6  Conclusion
+
+The experiment has been conducted successfully to establish the strength of relationships between the various variables in the dataset. Regression models have been formulated for future use in prediction and aid in decison making process in crime analysis. From the dataset used for this experiment, l can statistically say that murder crimes are related to the size of the population in a city and also other variables have little of low signficance levels in determing murder crimes.
+
